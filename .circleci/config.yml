@@ -1,0 +1,11 @@
+
+version: 2
+jobs:
+    build:
+        docker:
+            - image: circleci/python:3.7-stretch
+              environment:
+                PIPENV_VENV_IN_PROJECT: true
+        steps:
+            - checkout
+            - run: echo "Hello world"

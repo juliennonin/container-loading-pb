@@ -51,17 +51,20 @@ c.draw(ax)
 # %%
 class BoxType():
     def __init__(self, dim, permutation=[0,0,1]):
-        
         assert len(permutation) == 3, "permutation must be a list of 3 items"
         assert permutation[2] == 1, "the vertical aligmement of the z-axis must be allowed"
+        
         self.dim = np.array(dim)
-        orientations = [(dim[[0,2,1]], dim[[2,0,1]]),
-                        (dim[[2,1,0]], dim[[1,2,0]]),
-                        (dim[[0,1,2]], dim[[1,0,2]])]
+        
+        # Set all permutation allowed
+        orientations = [(self.dim[[2,1,0]], self.dim[[1,2,0]]),
+                        (self.dim[[0,2,1]], self.dim[[2,0,1]]),
+                        (self.dim[[0,1,2]], self.dim[[1,0,2]])]
         self.permuted_boxes = []
-        for i, vertical_alignment_allowed in enumerate(p):
+        for i, vertical_alignment_allowed in enumerate(permutation):
             if vertical_alignment_allowed:
                 self.permuted_boxes.extend(orientations[i])
+        self.permuted_boxes = np.array(self.permuted_boxes)
             
 
 

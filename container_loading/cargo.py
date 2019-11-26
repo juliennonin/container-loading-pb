@@ -4,8 +4,20 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
 
+#%%
+COLORS = [(0,0,1), (1,0,0), (0,0.6,0.25)]
 
-# %%
+class mess:
+    PURPLE = '\033[95m'
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    END = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+#%%
 class RectangularCuboid():
     def __init__(self, pos, dim):
         self.pos = pos
@@ -49,31 +61,41 @@ c.draw(ax)
 
 
 # %%
+class Box():
+    def __init__(self, dim, color):
+        self.dim = dim
+        self.color = color
+    
+    def __repr__(self):
+        return f"{mess.YELLOW}{'·'.join([str(d) for d in self.dim])}{mess.END}"
+# %%
 class BoxType():
-    def __init__(self, dim, permutation=[0,0,1]):
+    id = 0
+    def __init__(self, size, permutation=[0,0,1]):
         assert len(permutation) == 3, "permutation must be a list of 3 items"
         assert permutation[2] == 1, "the vertical aligmement of the z-axis must be allowed"
         
-        self.dim = np.array(dim)
+        self.size = np.array(size)
+        self.id = BoxType.id
+        BoxType.id += 1
+        self.color = COLORS[self.id % len(COLORS)]
         
         # Set all permutation allowed
-        orientations = [(self.dim[[2,1,0]], self.dim[[1,2,0]]),
-                        (self.dim[[0,2,1]], self.dim[[2,0,1]]),
-                        (self.dim[[0,1,2]], self.dim[[1,0,2]])]
+        orientations = [(self.size[[2,1,0]], self.size[[1,2,0]]),
+                        (self.size[[0,2,1]], self.size[[2,0,1]]),
+                        (self.size[[0,1,2]], self.size[[1,0,2]])]
         self.permuted_boxes = []
         for i, vertical_alignment_allowed in enumerate(permutation):
             if vertical_alignment_allowed:
-                self.permuted_boxes.extend(orientations[i])
-        self.permuted_boxes = np.array(self.permuted_boxes)
-            
-
-
-# %%
-class Box():
-    def __init__(self, dim, orientation_allowed=[1,1,1]):
-        self.dim = dim
-
-
+                self.permuted_boxes.append(Box(orientations[i][0], self.color))
+                self.permuted_boxes.append(Box(orientations[i][1], self.color))         
+    
+    def __repr__(self):
+        return f"({self.id}) {mess.YELLOW}{'·'.join([str(d) for d in self.size])}{mess.END}"
+#%%
+B = BoxType([10, 12, 9])
+print(B)
+print(B.permuted_boxes)
 # %%
 class Container():
     def __init__(self, dim, boxes):
@@ -82,6 +104,7 @@ class Container():
 
 
 # %%
-class Cargo():
-    pass
+
+
+
 

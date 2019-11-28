@@ -40,9 +40,9 @@ class RectangularCuboid():
                 [vertices[3], vertices[0], vertices[4], vertices[7]],
                 [vertices[4], vertices[5], vertices[6], vertices[7]]]
 
-    def draw(self, ax):
+    def draw(self, ax, color_vertices=(0,0,1), color_faces=(0.7,0.7,0.7)):
         faces = Poly3DCollection(self.faces, linestyle = '-', linewidths=1,
-            edgecolors=(0,0,1))
+            edgecolors=color_vertices, facecolor=(color_faces))
         ax.add_collection3d(faces)
         # Plot the points themselves to force the scaling of the axes
         vertices = self.vertices
@@ -68,6 +68,10 @@ class Box():
     
     def __repr__(self):
         return f"{mess.YELLOW}{'·'.join([str(d) for d in self.dim])}{mess.END}"
+
+    def draw(self, pos, ax):
+        RectangularCuboid(pos, self.dim).draw(ax, self.color, self.color + (0.1,))
+
 # %%
 class BoxType():
     id = 0
@@ -114,7 +118,11 @@ class Block():
 		+ mess.YELLOW + '·'.join([str(d) for d in self.dim]) \
 		+ mess.BLUE + ' (' + str(self.pos)[1:-1].replace(', ', ' ') +')' + mess.END
 
-    
+    def draw(self, ax):
+        for i, j, k in np.ndindex(*self.N):
+            self.box.draw([i*self.box.dim[0] , j*self.box.dim[1] , k*self.box.dim[2]], ax)
+
+
 #%%
 class Space():
     def __init__(self, pos, dim):
@@ -141,6 +149,13 @@ cargo = {B1:4, B2:3}
 #     print(t, boxtype, sep='\t')
 blocks = S.find_max_blocks(cargo)
 blocks
+
+#%%
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+blocks[0].draw(ax)
+ax.scatter(*[[0,max(blocks[0].dim)]]*3, s=0)
+plt.show()
 
 
 # %%

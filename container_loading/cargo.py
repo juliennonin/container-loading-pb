@@ -63,7 +63,7 @@ c.draw(ax)
 # %%
 class Box():
     def __init__(self, dim, color):
-        self.dim = dim
+        self.dim = np.array(dim)
         self.color = color
     
     def __repr__(self):
@@ -92,19 +92,55 @@ class BoxType():
     
     def __repr__(self):
         return f"({self.id}) {mess.YELLOW}{'·'.join([str(d) for d in self.size])}{mess.END}"
+
 #%%
-B = BoxType([10, 12, 9])
-print(B)
-print(B.permuted_boxes)
-# %%
-class Container():
-    def __init__(self, dim, boxes):
+class Block():
+    def __init__(self, box, N, space):
+        self.box = box
+        self.N = np.array(N)
+        self.space = space
+        self.pos = space.pos
+    
+    @property
+    def dim(self):
+        return self.N * self.box.dim
+
+    @property
+    def Ntot(self):
+        return np.prod(self.N)
+
+    def __repr__ (self):
+    		return mess.GREEN + 'x'.join(str(n) for n in self.N) + ' ' \
+		+ mess.YELLOW + '·'.join([str(d) for d in self.dim]) \
+		+ mess.BLUE + ' (' + str(self.pos)[1:-1].replace(', ', ' ') +')' + mess.END
+
+    
+#%%
+class Space():
+    def __init__(self, pos, dim):
         self.dim = dim
-        pass
+        self.pos = pos
+    
+    def find_max_blocks(self, cargo):
+        blocks = []
+        for boxtype, t in cargo.items():
+            for box in boxtype.permuted_boxes:
+                Nmax = 3*[0]
+                if (t != 0) and all([self.dim[i] >= box.dim[i] for i in range(3)]):
+                    Nmax[2] = min(int(self.dim[2] / box.dim[2]), t)
+                    Nmax[1] = min(int(self.dim[1] / box.dim[1]), int(t / Nmax[2]))
+                    Nmax[0] = min(int(self.dim[0] / box.dim[0]), int(t / (Nmax[2]*Nmax[1])))
+                    blocks.append(Block(box, Nmax, self))
+        return blocks
+#%%
+B1 = BoxType([10, 7, 3])
+B2 = BoxType([11, 4, 2.5], (1,1,1))
+S = Space([0,0,0], [37, 25, 22])
+cargo = {B1:4, B2:3}
+# for boxtype, t in cargo.items():
+#     print(t, boxtype, sep='\t')
+blocks = S.find_max_blocks(cargo)
+blocks
 
 
 # %%
-
-
-
-

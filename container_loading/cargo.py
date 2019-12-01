@@ -53,6 +53,10 @@ class Box():
     def __init__(self, dim, color):
         self.dim = np.array(dim)
         self.color = color
+
+    @property
+    def volume(self):
+        return np.prod(self.dim)
     
     def __repr__(self):
         return f"{mess.YELLOW}{'·'.join([str(d) for d in self.dim])}{mess.END}"
@@ -101,6 +105,13 @@ class Block():
     def Ntot(self):
         return np.prod(self.N)
 
+    @property
+    def volume(self):
+        return self.Ntot * self.box.volume
+
+    def __gt__(self, other):
+        return self.volume > other.volume
+
     def __repr__ (self):
     		return mess.GREEN + 'x'.join(str(n) for n in self.N) + ' ' \
 		+ mess.YELLOW + '·'.join([str(d) for d in self.dim]) \
@@ -110,12 +121,11 @@ class Block():
         for i, j, k in np.ndindex(*self.N):
             self.box.draw([i*self.box.dim[0] , j*self.box.dim[1] , k*self.box.dim[2]], ax)
 
-
 #%%
 class Space():
     def __init__(self, pos, dim):
         self.dim = np.array(dim)
-        self.pos = pos
+        self.pos = np.array(pos)
     
     def find_max_blocks(self, cargo):
         blocks = []
@@ -138,6 +148,9 @@ class Space():
         spaces.append(Space([sp0, sp1, sp2+bd2], [bd0, bd1, sd2-bd2])) # top space
         spaces.append(Space([sp0+bd0, sp1 , sp2], [sd0-bd0, sd1, sd2])) # front space
         return spaces
+    
+    def distance(self):
+        return np.sqrt(np.sum(self.pos))
 
     def __repr__(self):
         return mess.YELLOW + '·'.join([str(d) for d in self.dim]) + mess.BLUE + ' (' + str(self.pos)[1:-1].replace(', ', ' ') +')' + mess.END
@@ -150,12 +163,36 @@ class Container():
         self.blocks = []
         self.cargo = cargo
     
-    @parameter
+    @property
     def volume(self):
         return np.prod(self.dim)
+
+    def draw(self):
+        fig = plt.figure()
+        ax = fig.gca(projection='3d')
+        ax.scatter(*[[0, max(self.dim)]]*3, s=0)
+        RectangularCuboid([0,0,0], self.dim).draw(ax, (0.7,0.7,0.7,1), (1,1,1,0))
+        for block in self.blocks:
+            block.draw(ax)
     
+    def add_block(self, block):
+        pass
+
+    def fill(self, eval=max):
+        sorted(self.spaces, key=Space.distance)
+        space = self.spaces.pop(0)
+        blocks_possible = space.find_max_blocks(self.cargo)
+        new_block = eval(blocks_possible)
+        new_spaces = space.split(new_block)
+        self.blocks.append(new_block)
+        self.cargo[new_block.box] -= new_block.Ntot
 
 
+#%%
+B1 = BoxType([10, 12, 9])
+B2 = BoxType([24, 4.5, 20], [1,1,1])
+container = Container([37, 25, 25], {B1:4, B2:3})
+container.fill()
 #%%
 B1 = BoxType([10, 7, 3])
 B2 = BoxType([11, 4, 2.5], (1,1,1))

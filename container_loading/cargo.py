@@ -50,9 +50,9 @@ class RectangularCuboid():
 
 # %%
 class Box():
-    def __init__(self, dim, color):
+    def __init__(self, dim, boxtype):
         self.dim = np.array(dim)
-        self.color = color
+        self.type = boxtype
 
     @property
     def volume(self):
@@ -62,7 +62,7 @@ class Box():
         return f"{mess.YELLOW}{'·'.join([str(d) for d in self.dim])}{mess.END}"
 
     def draw(self, pos, ax):
-        RectangularCuboid(pos, self.dim).draw(ax, self.color, self.color + (0.1,))
+        RectangularCuboid(pos, self.dim).draw(ax, self.type.color, self.type.color + (0.1,))
 
 # %%
 class BoxType():
@@ -83,8 +83,8 @@ class BoxType():
         self.permuted_boxes = []
         for i, vertical_alignment_allowed in enumerate(permutation):
             if vertical_alignment_allowed:
-                self.permuted_boxes.append(Box(orientations[i][0], self.color))
-                self.permuted_boxes.append(Box(orientations[i][1], self.color))         
+                self.permuted_boxes.append(Box(orientations[i][0], self))
+                self.permuted_boxes.append(Box(orientations[i][1], self))         
     
     def __repr__(self):
         return f"({self.id}) {mess.YELLOW}{'·'.join([str(d) for d in self.size])}{mess.END}"
@@ -184,31 +184,16 @@ class Container():
         blocks_possible = space.find_max_blocks(self.cargo)
         new_block = eval(blocks_possible)
         new_spaces = space.split(new_block)
+        self.spaces.append(new_spaces)
         self.blocks.append(new_block)
-        self.cargo[new_block.box] -= new_block.Ntot
+        self.cargo[new_block.box.type] -= new_block.Ntot
 
 
 #%%
-B1 = BoxType([10, 12, 9])
-B2 = BoxType([24, 4.5, 20], [1,1,1])
-container = Container([37, 25, 25], {B1:4, B2:3})
+B1 = BoxType([20, 24, 18])
+B2 = BoxType([48, 9, 40], [1,1,1])
+container = Container([74, 50, 50], {B1:4, B2:3})
 container.fill()
-#%%
-B1 = BoxType([10, 7, 3])
-B2 = BoxType([11, 4, 2.5], (1,1,1))
-S = Space([0,0,0], [37, 25, 22])
-cargo = {B1:4, B2:3}
-# for boxtype, t in cargo.items():
-#     print(t, boxtype, sep='\t')
-blocks = S.find_max_blocks(cargo)
-blocks
-
-#%%
-fig = plt.figure()
-ax = fig.gca(projection='3d')
-blocks[0].draw(ax)
-ax.scatter(*[[0,max(blocks[0].dim)]]*3, s=0)
-plt.show()
-
+container.draw()
 
 # %%

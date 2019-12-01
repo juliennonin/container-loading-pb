@@ -118,8 +118,8 @@ class Block():
 		+ mess.BLUE + ' (' + str(self.pos)[1:-1].replace(', ', ' ') +')' + mess.END
 
     def draw(self, ax):
-        for i, j, k in np.ndindex(*self.N):
-            self.box.draw([i*self.box.dim[0] , j*self.box.dim[1] , k*self.box.dim[2]], ax)
+        for n in np.ndindex(*self.N):
+            self.box.draw(n * self.box.dim + self.pos, ax)
 
 #%%
 class Space():
@@ -167,33 +167,34 @@ class Container():
     def volume(self):
         return np.prod(self.dim)
 
+    def fill(self, eval=max):
+        sorted(self.spaces, key=Space.distance)
+        space = self.spaces.pop(0)
+        blocks_possible = space.find_max_blocks(self.cargo)
+        if blocks_possible:
+            new_block = eval(blocks_possible)
+            new_spaces = space.split(new_block)
+            self.spaces.extend(new_spaces)
+            self.blocks.append(new_block)
+            self.cargo[new_block.box.type] -= new_block.Ntot
+        
     def draw(self):
-        fig = plt.figure()
+        fig = plt.figure(figsize=plt.figaspect(1)*1.5)
         ax = fig.gca(projection='3d')
         ax.scatter(*[[0, max(self.dim)]]*3, s=0)
         RectangularCuboid([0,0,0], self.dim).draw(ax, (0.7,0.7,0.7,1), (1,1,1,0))
         for block in self.blocks:
             block.draw(ax)
-    
-    def add_block(self, block):
-        pass
-
-    def fill(self, eval=max):
-        sorted(self.spaces, key=Space.distance)
-        space = self.spaces.pop(0)
-        blocks_possible = space.find_max_blocks(self.cargo)
-        new_block = eval(blocks_possible)
-        new_spaces = space.split(new_block)
-        self.spaces.append(new_spaces)
-        self.blocks.append(new_block)
-        self.cargo[new_block.box.type] -= new_block.Ntot
 
 
 #%%
 B1 = BoxType([20, 24, 18])
 B2 = BoxType([48, 9, 40], [1,1,1])
 container = Container([74, 50, 50], {B1:4, B2:3})
+
+#%%
 container.fill()
 container.draw()
+
 
 # %%

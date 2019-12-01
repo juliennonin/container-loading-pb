@@ -48,18 +48,6 @@ class RectangularCuboid():
         vertices = self.vertices
         # ax.scatter(vertices[:,0], vertices[:,1], vertices[:,2], s=0)
 
-
-# %%
-# get_ipython().run_line_magic('matplotlib', 'qt')
-c = RectangularCuboid([0, 0, 0], [1, 4, 5])
-fig = plt.figure(figsize=plt.figaspect(1)*1.5)
-ax = fig.gca(projection='3d')
-ax.scatter([0,5], [0,5], [0,5], s=0)
-# scaling = np.array([getattr(ax, 'get_{}lim'.format(dim))() for dim in 'xyz'])
-# ax.auto_scale_xyz(*[[np.min(scaling), np.max(scaling)]]*3)
-c.draw(ax)
-
-
 # %%
 class Box():
     def __init__(self, dim, color):
@@ -126,7 +114,7 @@ class Block():
 #%%
 class Space():
     def __init__(self, pos, dim):
-        self.dim = dim
+        self.dim = np.array(dim)
         self.pos = pos
     
     def find_max_blocks(self, cargo):
@@ -134,12 +122,40 @@ class Space():
         for boxtype, t in cargo.items():
             for box in boxtype.permuted_boxes:
                 Nmax = 3*[0]
-                if (t != 0) and all([self.dim[i] >= box.dim[i] for i in range(3)]):
+                if (t != 0) and np.all(self.dim >= box.dim):
                     Nmax[2] = min(int(self.dim[2] / box.dim[2]), t)
                     Nmax[1] = min(int(self.dim[1] / box.dim[1]), int(t / Nmax[2]))
                     Nmax[0] = min(int(self.dim[0] / box.dim[0]), int(t / (Nmax[2]*Nmax[1])))
                     blocks.append(Block(box, Nmax, self))
         return blocks
+    
+    def split(self, block):
+        spaces = []
+        sp0, sp1, sp2 = self.pos
+        bd0, bd1, bd2 = block.dim
+        sd0, sd1, sd2 = self.dim
+        spaces.append(Space([sp0, sp1+bd1, sp2], [bd0, sd1-bd1, sd2])) # side space
+        spaces.append(Space([sp0, sp1, sp2+bd2], [bd0, bd1, sd2-bd2])) # top space
+        spaces.append(Space([sp0+bd0, sp1 , sp2], [sd0-bd0, sd1, sd2])) # front space
+        return spaces
+
+    def __repr__(self):
+        return mess.YELLOW + '·'.join([str(d) for d in self.dim]) + mess.BLUE + ' (' + str(self.pos)[1:-1].replace(', ', ' ') +')' + mess.END
+
+#%%
+class Container():
+    def __init__(self, dim, cargo):
+        self.dim = np.array(dim)
+        self.spaces = [Space([0,0,0], self.dim)]
+        self.blocks = []
+        self.cargo = cargo
+    
+    @parameter
+    def volume(self):
+        return np.prod(self.dim)
+    
+
+
 #%%
 B1 = BoxType([10, 7, 3])
 B2 = BoxType([11, 4, 2.5], (1,1,1))

@@ -1,0 +1,67 @@
+\usepackage{xcolor}
+\definecolor{color1}{HTML}{247BA0}
+\definecolor{color2}{HTML}{bb0a21}
+\definecolor{color3}{HTML}{161032}
+\definecolor{color4}{HTML}{fa7921}
+\definecolor{dark}{HTML}{f00000} % comment
+
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+
+%_________________https://tex.stackexchange.com/a/334421_________________
+\makeatletter
+\def\pgfutil@gobble#1{}
+\pgfkeys{/handlers/.unknown to list/.code=%
+  \let#1\pgfutil@gobble
+  \pgfkeysalso{% or \pgfkeys{\pgfkeyscurrentpath/.cd,
+    .unknown/.code=% how to handle the difference between 'key' and 'key=value'?
+      \ifx\pgfkeyscurrentvalue\pgfkeysnovalue
+        \let\pgfkeys@temp\pgfkeyscurrentname
+      \else
+        \expandafter\expandafter\expandafter\def\expandafter\expandafter\expandafter\pgfkeys@temp\expandafter\expandafter\expandafter{\expandafter\pgfkeyscurrentname\expandafter=\expandafter{\pgfkeyscurrentvalue}}%
+      \fi
+      \expandafter\expandafter\expandafter\def\expandafter\expandafter\expandafter#1\expandafter\expandafter\expandafter{\expandafter#1\expandafter,\pgfkeys@temp},%
+     .@clear list/.code=\let#1\pgfutil@gobble}%
+}
+\makeatother
+
+
+\pgfkeys{
+    /cuboid/.is family, /cuboid,
+    depth/.estore in = \cuboidz,
+    width/.estore in = \cuboidx,
+    height/.estore in = \cuboidy,
+    col/.estore in = \color,
+    .unknown to list = \cuboidOptions,
+    default/.style = {width=1, height=1, depth=1, col=color1, draw},
+}
+%________________________________________________________________________
+
+\newcommand{\cuboid}[2][]{
+
+  \pgfkeys{/cuboid, default, #1}%
+  \begingroup
+    \edef\x{%
+      \endgroup
+      \noexpand\begin{scope}[shift={#2}, join=bevel, \cuboidOptions]
+        \noexpand\draw[fill=\color!15] (0,\cuboidy,0) -- (\cuboidx,\cuboidy,0) -- (\cuboidx,\cuboidy,\cuboidz) -- (0,\cuboidy,\cuboidz) -- cycle;
+        \noexpand\draw[fill=\color!35] (\cuboidx,0,0) -- (\cuboidx,\cuboidy,0) -- (\cuboidx,\cuboidy,\cuboidz) -- (\cuboidx,0,\cuboidz) -- cycle;
+        \noexpand\draw[fill=\color!60] (0,0,\cuboidz) -- (\cuboidx,0,\cuboidz) -- (\cuboidx,\cuboidy,\cuboidz) -- (0,\cuboidy,\cuboidz) -- cycle;
+      \noexpand\end{scope}
+      \noexpand\pgfkeys{/cuboid/.@clear list}
+    }%
+    \x
+}
+
+
+\newcommand{\containerBack}[3]{
+    \draw[dashed] (0,0,0) -- (0, 0, #3);% node [above,text centered]{$x$}; % -- (7, 0, 10) -- (7, 0, 0) -- cycle; %bottom
+    \draw[dashed] (0,0,0) -- (0,#2,0);% node [above,text centered]{$z$}; % -- (0,5,10) -- (0,0,10)--cycle; %left
+    \draw[dashed] (0,0,0) -- (#1,0,0);% node [above,text centered]{$y$}; % -- (7,5,0)--(0,5,0)--cycle; % back
+}
+
+\newcommand{\containerFront}[3]{
+    \draw (0,#2,#3)--(0,0,#3)--(#1,0,#3);% --(7,5,10)--cycle; %front
+    \draw (#1,#2,#3) -- (#1,0,#3) -- (#1,0,0) -- (#1,#2,0); %--cycle; %right
+    \draw (0,#2,0) -- (0, #2, #3) -- (#1, #2, #3) -- (#1, #2, 0) -- cycle; %top
+}

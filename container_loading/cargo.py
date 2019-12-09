@@ -7,7 +7,7 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
 #%%
 COLORS = [(0,0,1), (1,0,0), (0,0.6,0.25)]
 
-class mess:
+class mess:   
     PURPLE = '\033[95m'
     BLUE = '\033[94m'
     GREEN = '\033[92m'
@@ -19,12 +19,27 @@ class mess:
 
 #%%
 class RectangularCuboid():
-    def __init__(self, pos, dim):
+    """Geometrical rectangular cuboid in Euclidian space (x, y, z)
+    Its origin is the bottom left corner of the back face.
+    This class is mainly used to display any parallelepipedic shaped object.
+
+    Attributes:
+        pos {array of 3 floats} -- coordinates of its origin.
+        dim {array of 3 floats} -- dimension resp. along the x, y and z-axis
+            (width, length and heigth)
+    """    
+
+    def __init__(self, pos, dim):      
         self.pos = pos
         self.dim = dim
-    
+
     @property
     def vertices(self):
+        """Generate the coordinates of the 8 vertices of the cuboid.
+        
+        Returns:
+            {list of 8 coord.} -- list of vertices
+        """        
         x, y, z = self.pos
         w, l, h = self.dim
         return np.array([[x, y, z], [x, y+l, z], [x+w, y+l, z],[x+w, y, z],
@@ -32,6 +47,12 @@ class RectangularCuboid():
     
     @property
     def faces(self):
+        """Generate the 6 faces of the cuboid.
+        Each face is defined by a list of its 4 vertices.
+        
+        Returns:
+            {list of 6 faces} -- list of faces
+        """        
         vertices = self.vertices
         return [[vertices[0], vertices[1], vertices[2], vertices[3]],
                 [vertices[0], vertices[1], vertices[5], vertices[4]],
@@ -41,21 +62,35 @@ class RectangularCuboid():
                 [vertices[4], vertices[5], vertices[6], vertices[7]]]
 
     def draw(self, ax, color_vertices=(0,0,1), color_faces=(0.7,0.7,0.7)):
+        """Draw the rectangular cuboid in a given matplotlib.pyplot.axes.
+        
+        Arguments:
+            ax {plt.axes} -- Axes in which the cuboid will be drawn
+            color_vertices {tuple} -- RGB color of the vertices (default: {(0,0,1)})
+            color_faces {tuple} -- RGB color of the faces (default: {(0.7,0.7,0.7)})
+        """        
         faces = Poly3DCollection(self.faces, linestyle = '-', linewidths=1,
             edgecolors=color_vertices, facecolor=(color_faces))
         ax.add_collection3d(faces)
         # Plot the points themselves to force the scaling of the axes
-        vertices = self.vertices
+        # vertices = self.verticesx
         # ax.scatter(vertices[:,0], vertices[:,1], vertices[:,2], s=0)
 
 # %%
 class Box():
+    """Physical box that will be loaded into a container. Represent a feasible
+    orientation of a given BoxType.
+    
+    Attributes:
+        dim {list of 3 floats} -- dimension along the x, y and z-axis
+        type {BoxType} -- type of the box
+    """    
     def __init__(self, dim, boxtype):
         self.dim = np.array(dim)
         self.type = boxtype
 
     @property
-    def volume(self):
+    def volume(self):        
         return np.prod(self.dim)
     
     def __repr__(self):
@@ -66,6 +101,22 @@ class Box():
 
 # %%
 class BoxType():
+    """Boxes that share the same dimensions and possible orientations are
+    grouped into BoxTypes.
+
+    Arguments:
+        size {list of 3 floats} -- cf. Attributes
+        permutation {list of 3 booleans} -- represents the allowed orientation
+            if permutation[i], then the vertical alignement (z-axis) of the
+            i-th dimension is allowed ;
+            otherwise, the i-th dimension cannot be aligned with the z-axis
+
+    Attributes:
+        size {list of 3 floats} -- dimension of the Boxes, regardless of the orientation
+        id {int} -- index for identifying types
+        color {tuple} -- RGB color used to draw a Box
+        permuted_boxes {list of Boxes} -- All possible orientation of a BoxType
+    """    
     id = 0
     def __init__(self, size, permutation=[0,0,1]):
         assert len(permutation) == 3, "permutation must be a list of 3 items"
@@ -91,22 +142,33 @@ class BoxType():
 
 #%%
 class Block():
+    """A Block is a composition of Boxes of the same BoxType.
+    
+    Attributes:
+        box {Box} -- Box of which the Block is composed
+        N {triplet of ints} -- N[0] is the number of boxes along the x-axis,
+            so that N[0]*N[1]*N[2] is the total number of boxes in the block
+        pos {coord.} -- position of the Block (i.e. of its bottom back left corner)
+    """    
     def __init__(self, box, N, space):
         self.box = box
         self.N = np.array(N)
-        self.space = space
+        # self.space = space
         self.pos = space.pos
     
     @property
     def dim(self):
+        """Dimensions of the Block"""        
         return self.N * self.box.dim
 
     @property
     def Ntot(self):
+        """Number of Boxes inside the Block"""
         return np.prod(self.N)
 
     @property
     def volume(self):
+        """Volume of the Block"""
         return self.Ntot * self.box.volume
 
     def __gt__(self, other):
@@ -123,23 +185,48 @@ class Block():
 
 #%%
 class Space():
+    """Empty cuboidal space, which we are trying to fill with Blocks (of Boxes).
+    
+    Attributes:
+        pos {array of 3 floats} -- coordinates of its origin.
+        dim {array of 3 floats} -- dimension resp. along the x, y and z-axis
+    """
     def __init__(self, pos, dim):
         self.dim = np.array(dim)
         self.pos = np.array(pos)
     
     def find_max_blocks(self, cargo):
+        """Given a set of BoxTypes (cargo), find all maximal Blocks that can
+        fill the Space. (i.e. for each BoxType b in quantity q, find the biggest
+        Block that can fit into the Space)
+        
+        Arguments:
+            cargo {dict[BoxType,int]} -- available BoxTypes (key) and their quantity (value)
+        
+        Returns:
+            blocks {list[Blocks]} -- maximal Blocks that can fit into the Space
+        """        
         blocks = []
-        for boxtype, t in cargo.items():
+        for boxtype, q in cargo.items():
             for box in boxtype.permuted_boxes:
                 Nmax = 3*[0]
-                if (t != 0) and np.all(self.dim >= box.dim):
-                    Nmax[2] = min(int(self.dim[2] / box.dim[2]), t)
-                    Nmax[1] = min(int(self.dim[1] / box.dim[1]), int(t / Nmax[2]))
-                    Nmax[0] = min(int(self.dim[0] / box.dim[0]), int(t / (Nmax[2]*Nmax[1])))
+                if (q != 0) and np.all(self.dim >= box.dim):
+                    Nmax[2] = min(int(self.dim[2] / box.dim[2]), q)
+                    Nmax[1] = min(int(self.dim[1] / box.dim[1]), int(q / Nmax[2]))
+                    Nmax[0] = min(int(self.dim[0] / box.dim[0]), int(q / (Nmax[2]*Nmax[1])))
                     blocks.append(Block(box, Nmax, self))
         return blocks
     
     def split(self, block):
+        """Return the 3 new spaces generated after the loading of a block into
+        the Space
+        
+        Arguments:
+            block {Block} -- Block that will be loaded into the Space
+        
+        Returns:
+            spaces {list of 3 Spaces} -- [side space, top space, front space]
+        """        
         spaces = []
         sp0, sp1, sp2 = self.pos
         bd0, bd1, bd2 = block.dim
@@ -150,6 +237,7 @@ class Space():
         return spaces
     
     def distance(self):
+        """Distance to the origin"""        
         return np.sqrt(np.sum(self.pos))
 
     def __repr__(self):
@@ -157,6 +245,16 @@ class Space():
 
 #%%
 class Container():
+    """Container in which boxes must be loaded.
+    Container is described as a set of Spaces and Blocks.
+    
+    Attributes:
+        dim {list of 3 floats} -- dimension resp. along x, y and z-axis
+        cargo {dict[BoxType,int]} -- Boxtypes (and their quantity) that still
+        blocks {list of Blocks} -- Blocks of boxes that have been loaded
+        spaces {list of Space} -- the remaining spaces that can be filled
+            need to be loaded in the container
+    """    
     def __init__(self, dim, cargo):
         self.dim = np.array(dim)
         self.spaces = [Space([0,0,0], self.dim)]
@@ -168,6 +266,12 @@ class Container():
         return np.prod(self.dim)
 
     def fill(self, eval=max):
+        """[naiv] Select and fill one Block inside the Container
+        
+        Keyword Arguments:
+            eval {function} -- Function to select one Block among a set
+                of Blocks (default: {max})
+        """        
         sorted(self.spaces, key=Space.distance)
         space = self.spaces.pop(0)
         blocks_possible = space.find_max_blocks(self.cargo)

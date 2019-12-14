@@ -86,6 +86,7 @@ class Box():
         type {BoxType} -- type of the box
     """    
     def __init__(self, dim, boxtype):
+        """[TODO] Check that dim is allowed by the boxtype"""
         self.dim = np.array(dim)
         self.type = boxtype
 
@@ -176,7 +177,7 @@ class Block():
 
     def __repr__ (self):
     		return mess.GREEN + 'x'.join(str(n) for n in self.N) + ' ' \
-		+ mess.YELLOW + '·'.join([str(d) for d in self.dim]) \
+		+ mess.YELLOW + '·'.join([str(d) for d in self.box.dim]) \
 		+ mess.BLUE + ' (' + str(self.pos)[1:-1].replace(', ', ' ') +')' + mess.END
 
     def draw(self, ax):
@@ -226,6 +227,9 @@ class Space():
         
         Returns:
             spaces {list of 3 Spaces} -- [side space, top space, front space]
+        
+        [TODO]: Check that block is compatible with the space
+        Idea: assert block.space == self
         """        
         spaces = []
         sp0, sp1, sp2 = self.pos
@@ -240,9 +244,15 @@ class Space():
         """Distance to the origin"""        
         return np.sqrt(np.sum(self.pos))
 
+    def __eq__(self, other):
+        return all(self.dim == other.dim) and all(self.pos == other.pos)
+
     def __repr__(self):
         return mess.YELLOW + '·'.join([str(d) for d in self.dim]) + mess.BLUE + ' (' + str(self.pos)[1:-1].replace(', ', ' ') +')' + mess.END
 
+    def draw(self, ax):
+        ax.scatter(*[[x, max(self.dim)] for x in self.pos], s=0)
+        RectangularCuboid(self.pos, self.dim).draw(ax, (0.7,0.7,0.7,1), (1,1,1,0))
 #%%
 class Container():
     """Container in which boxes must be loaded.
@@ -292,13 +302,12 @@ class Container():
 
 
 #%%
-B1 = BoxType([20, 24, 18])
-B2 = BoxType([48, 9, 40], [1,1,1])
-container = Container([74, 50, 50], {B1:4, B2:3})
-
-#%%
-container.fill()
-container.draw()
+if __name__ == "__main__":
+    B1 = BoxType([20, 24, 18])
+    B2 = BoxType([48, 9, 40], [1,1,1])
+    container = Container([74, 50, 50], {B1:4, B2:3})
+    container.fill()
+    container.draw()
 
 
 # %%

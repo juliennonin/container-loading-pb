@@ -1,5 +1,5 @@
 import unittest
-import container_loading.cargo as cargo
+import container_loading.cargo as clp
 
 class BoxTypeTest(unittest.TestCase):
 
@@ -8,14 +8,14 @@ class BoxTypeTest(unittest.TestCase):
         self.dim = [1, 5, 7]
 
     def test_2_orientations(self):
-        boxtype = cargo.BoxType(self.dim, (0,0,1))
+        boxtype = clp.BoxType(self.dim, (0,0,1))
         permutations = [list(box.dim) for box in boxtype.permuted_boxes]
         self.assertEqual(len(permutations), 2)
         self.assertIn([1, 5, 7], permutations)
         self.assertIn([5, 1, 7], permutations)
 
     def test_vertical_x(self):
-        boxtype = cargo.BoxType(self.dim, (1,0,1))
+        boxtype = clp.BoxType(self.dim, (1,0,1))
         permutations = [list(box.dim) for box in boxtype.permuted_boxes]
         self.assertEqual(len(permutations), 4)
         self.assertIn([1, 5, 7], permutations)
@@ -24,7 +24,7 @@ class BoxTypeTest(unittest.TestCase):
         self.assertIn([5, 7, 1], permutations)
 
     def test_vertical_y(self):
-        boxtype = cargo.BoxType(self.dim, (0,1,1))
+        boxtype = clp.BoxType(self.dim, (0,1,1))
         permutations = [list(box.dim) for box in boxtype.permuted_boxes]
         self.assertEqual(len(permutations), 4)
         self.assertIn([1, 5, 7], permutations)
@@ -33,7 +33,7 @@ class BoxTypeTest(unittest.TestCase):
         self.assertIn([7, 1, 5], permutations)
 
     def test_all_orientations(self):
-        boxtype = cargo.BoxType(self.dim, (1,1,1))
+        boxtype = clp.BoxType(self.dim, (1,1,1))
         permutations = [list(box.dim) for box in boxtype.permuted_boxes]
         self.assertEqual(len(permutations), 6)
         self.assertIn([1, 5, 7], permutations)

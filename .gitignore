@@ -19,3 +19,6 @@ ipython_config.py
 # Byte-compiled / optimized / DLL files
 __pycache__/
 */__pycache__/
+
+### Perso test file ###
+temp.py

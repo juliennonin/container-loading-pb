@@ -3,9 +3,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
-
+import tikz_to_png
 #%%
 COLORS = [(0,0,1), (1,0,0), (0,0.6,0.25)]
+MAX_TIKZ_COLORS = 5
 
 class mess:   
     PURPLE = '\033[95m'
@@ -26,7 +27,7 @@ class RectangularCuboid():
     Attributes:
         pos {array of 3 floats} -- coordinates of its origin.
         dim {array of 3 floats} -- dimension resp. along the x, y and z-axis
-            (width, length and heigth)
+            (length, width and heigth)
     """    
 
     def __init__(self, pos, dim):      
@@ -76,6 +77,9 @@ class RectangularCuboid():
         # vertices = self.verticesx
         # ax.scatter(vertices[:,0], vertices[:,1], vertices[:,2], s=0)
 
+    def tikz(self, color):
+        return r"\cuboid[l={0}, w={1}, h={2}, c={3}]{{({5}, {6}, {4})}}".format(*self.dim, color, *self.pos)
+
 # %%
 class Box():
     """Physical box that will be loaded into a container. Represent a feasible
@@ -100,6 +104,8 @@ class Box():
     def draw(self, pos, ax):
         RectangularCuboid(pos, self.dim).draw(ax, self.type.color, self.type.color + (0.1,))
 
+    def tikz(self, pos):
+        return RectangularCuboid(pos, self.dim).tikz('color' + str(self.type.id % MAX_TIKZ_COLORS))
 # %%
 class BoxType():
     """Boxes that share the same dimensions and possible orientations are
@@ -183,6 +189,14 @@ class Block():
     def draw(self, ax):
         for n in np.ndindex(*self.N):
             self.box.draw(n * self.box.dim + self.pos, ax)
+
+    def tikz(self, begin='', end='\n'):
+        s = ""
+        for n in np.ndindex(*self.N):
+            s += begin
+            s += self.box.tikz(n * self.box.dim + self.pos)
+            s += end
+        return s
 
 #%%
 class Space():
@@ -300,14 +314,37 @@ class Container():
         for block in self.blocks:
             block.draw(ax)
 
+    def tikz(self):
+        s = r"\begin{tikzpicture}[scale=0.1, z={(200:1)}, x={(-30:.87)}]" + '\n'
+        s += r"\containerBack{{{}}}{{{}}}{{{}}}".format(*self.dim)
+        for b in self.blocks:
+            s += '\n'
+            s += b.tikz(begin='\t')
+        s += r"\containerFront{{{}}}{{{}}}{{{}}}".format(*self.dim) + '\n'
+        s += r"\end{tikzpicture}"
+        return s
+
+    def save_png(self, filename, dir='img'):
+        with open(dir + '/' + filename + '.tex', 'w+') as f:
+            f.write(r"\documentclass{standalone}" + '\n')
+            f.write(fr"\input{{{dir}/_cuboid.tex}}" + '\n')
+            f.write(r"\begin{document}" + '\n')
+            f.write(self.tikz())
+            f.write('\n' + r"\end{document}")
+        tikz_to_png.convert(dir, filename)
+        return
 
 #%%
 if __name__ == "__main__":
+    import os
     B1 = BoxType([20, 24, 18])
     B2 = BoxType([48, 9, 40], [1,1,1])
     container = Container([74, 50, 50], {B1:4, B2:3})
     container.fill()
     container.draw()
+    container.fill()
+    container.fill()
+    container.save_png("test3")
 
 
 # %%

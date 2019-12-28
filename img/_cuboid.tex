@@ -1,9 +1,9 @@
 \usepackage{xcolor}
-\definecolor{color1}{HTML}{247BA0}
-\definecolor{color2}{HTML}{bb0a21}
-\definecolor{color3}{HTML}{f6ae2d}
-\definecolor{color4}{HTML}{3a3042}
-\definecolor{color5}{HTML}{870058}
+\definecolor{color0}{HTML}{247BA0}
+\definecolor{color1}{HTML}{bb0a21}
+\definecolor{color2}{HTML}{f6ae2d}
+\definecolor{color3}{HTML}{3a3042}
+\definecolor{color4}{HTML}{870058}
 
 \definecolor{dark}{HTML}{f00000} % comment
 
@@ -33,12 +33,12 @@
 
 \pgfkeys{
     /cuboid/.is family, /cuboid,
-    depth/.estore in = \cuboidz,
-    width/.estore in = \cuboidx,
-    height/.estore in = \cuboidy,
-    col/.estore in = \color,
+    l/.estore in = \cuboidz,
+    w/.estore in = \cuboidx,
+    h/.estore in = \cuboidy,
+    c/.estore in = \color,
     .unknown to list = \cuboidOptions,
-    default/.style = {width=1, height=1, depth=1, col=color1, draw},
+    default/.style = {w=1, h=1, l=1, c=color1, draw},
 }
 %________________________________________________________________________
 
@@ -60,13 +60,13 @@
 
 
 \newcommand{\containerBack}[3]{
-    \draw[dashed] (0,0,0) -- (0, 0, #3);% node [above,text centered]{$x$}; % -- (7, 0, 10) -- (7, 0, 0) -- cycle; %bottom
-    \draw[dashed] (0,0,0) -- (0,#2,0);% node [above,text centered]{$z$}; % -- (0,5,10) -- (0,0,10)--cycle; %left
-    \draw[dashed] (0,0,0) -- (#1,0,0);% node [above,text centered]{$y$}; % -- (7,5,0)--(0,5,0)--cycle; % back
+    \draw[dashed] (0,0,0) -- (0, 0, #1);% node [above,text centered]{$x$}; % -- (7, 0, 10) -- (7, 0, 0) -- cycle; %bottom
+    \draw[dashed] (0,0,0) -- (0,#3,0);% node [above,text centered]{$z$}; % -- (0,5,10) -- (0,0,10)--cycle; %left
+    \draw[dashed] (0,0,0) -- (#2,0,0);% node [above,text centered]{$y$}; % -- (7,5,0)--(0,5,0)--cycle; % back
 }
 
 \newcommand{\containerFront}[3]{
-    \draw (0,#2,#3)--(0,0,#3)--(#1,0,#3);% --(7,5,10)--cycle; %front
-    \draw (#1,#2,#3) -- (#1,0,#3) -- (#1,0,0) -- (#1,#2,0); %--cycle; %right
-    \draw (0,#2,0) -- (0, #2, #3) -- (#1, #2, #3) -- (#1, #2, 0) -- cycle; %top
+    \draw (0,#3,#1)--(0,0,#1)--(#2,0,#1);% --(7,5,10)--cycle; %front
+    \draw (#2,#3,#1) -- (#2,0,#1) -- (#2,0,0) -- (#2,#3,0); %--cycle; %right
+    \draw (0,#3,0) -- (0, #3, #1) -- (#2, #3, #1) -- (#2, #3, 0) -- cycle; %top
 }

@@ -3,20 +3,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
-import tikz_to_png
+import container_loading.tikz_to_png as tikz_to_png
 #%%
 COLORS = [(0,0,1), (1,0,0), (0,0.6,0.25)]
 MAX_TIKZ_COLORS = 5
 
 class mess:   
-    PURPLE = '\033[95m'
-    BLUE = '\033[94m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    RED = '\033[91m'
     END = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+    RED = '\033[91m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[33m'  # regular, 93m for high intensity
+    BLUE = '\033[94m'
+    PURPLE = '\033[95m'
 
 #%%
 class RectangularCuboid():
@@ -305,6 +305,14 @@ class Container():
             self.spaces.extend(new_spaces)
             self.blocks.append(new_block)
             self.cargo[new_block.box.type] -= new_block.Ntot
+    
+    def __repr__(self):
+        s = str(self.cargo)
+        for b in self.blocks:
+            s += "({b.box.type.id})" + mess.GREEN + 'x'.join(str(n) for n in b.N) + mess.END +', '
+        for f in self.spaces:
+            s += mess.YELLOW + '·'.join([str(d) for d in f.dim]) + mess.END + ', '
+        return s
         
     def draw(self):
         fig = plt.figure(figsize=plt.figaspect(1)*1.5)
@@ -327,7 +335,7 @@ class Container():
     def save_png(self, filename, dir='img'):
         with open(dir + '/' + filename + '.tex', 'w+') as f:
             f.write(r"\documentclass{standalone}" + '\n')
-            f.write(fr"\input{{{dir}/_cuboid.tex}}" + '\n')
+            f.write(fr"\input{{img/_cuboid.tex}}" + '\n')
             f.write(r"\begin{document}" + '\n')
             f.write(self.tikz())
             f.write('\n' + r"\end{document}")

@@ -322,22 +322,23 @@ class Container():
         for block in self.blocks:
             block.draw(ax)
 
-    def tikz(self):
-        s = r"\begin{tikzpicture}[scale=0.1, z={(200:1)}, x={(-30:.87)}]" + '\n'
+    def tikz(self, scale=1):
+        max_dim = max(*self.dim)
+        s = fr"\begin{{tikzpicture}}[scale={{{scale*4.44/max_dim}}}, z={{(200:1)}}, x={{(-30:.87)}}]" + '\n'
         s += r"\containerBack{{{}}}{{{}}}{{{}}}".format(*self.dim)
-        for b in self.blocks:
+        for b in sorted(self.blocks, key=lambda b: list(b.pos)):
             s += '\n'
             s += b.tikz(begin='\t')
         s += r"\containerFront{{{}}}{{{}}}{{{}}}".format(*self.dim) + '\n'
         s += r"\end{tikzpicture}"
         return s
 
-    def save_png(self, filename, dir='img'):
+    def save_png(self, filename, dir='img', scale=1):
         with open(dir + '/' + filename + '.tex', 'w+') as f:
             f.write(r"\documentclass{standalone}" + '\n')
             f.write(fr"\input{{img/_cuboid.tex}}" + '\n')
             f.write(r"\begin{document}" + '\n')
-            f.write(self.tikz())
+            f.write(self.tikz(scale=scale))
             f.write('\n' + r"\end{document}")
         tikz_to_png.convert(dir, filename)
         return
